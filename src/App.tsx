@@ -1,30 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  listenToOrders,
-  openConnection,
-  subscribeToOrderbook,
-  FeedPush,
-} from "./api";
-import { messagesToChangesets, OrderChangesets } from "./transform";
+import { listenToOrders, openConnection, subscribeToOrderbook } from "./api";
+import { applyChangesets, messagesToChangesets, State } from "./orders";
 import { throttleAccumulated } from "./utils";
+import { flow } from "fp-ts/function";
 
 const THROTTLE_INTERVAL_MS = 100;
 
-type State = OrderChangesets;
-
 function App() {
-  const [state, setState] = useState<State>({ asks: {}, bids: {} });
+  const [state, setState] = useState({ asks: {}, bids: {} } as State);
 
   const onMessage = useMemo(
     () =>
-      throttleAccumulated((messages: FeedPush[]) => {
-        const changeset = messagesToChangesets(messages);
-
-        setState((oldState) => ({
-          asks: { ...oldState.asks, ...changeset.asks },
-          bids: { ...oldState.bids, ...changeset.bids },
-        }));
-      }, THROTTLE_INTERVAL_MS),
+      throttleAccumulated(
+        flow(messagesToChangesets, applyChangesets, setState),
+        THROTTLE_INTERVAL_MS
+      ),
     []
   );
 

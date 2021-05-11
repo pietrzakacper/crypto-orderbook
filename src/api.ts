@@ -1,9 +1,6 @@
 import { JsonDecoder } from "ts.data.json";
-import { Order } from "./transform";
-
-type Nominal<T, Type extends string> = T & {
-  __Type: Type;
-};
+import { Order } from "./orders";
+import { Nominal } from "./types";
 
 type ConnectedSocket = Nominal<WebSocket, "ConnectedSocket">;
 
