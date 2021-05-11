@@ -1,3 +1,4 @@
+import { groupBy, mapValues, sum } from "lodash";
 import { FeedPush } from "./api";
 
 export type Price = number;
@@ -6,27 +7,10 @@ type Size = number;
 type OrdersState = Record<Price, Size>;
 export type Order = [Price, Size];
 
-const orderToChangeset = (order: Order): OrdersState => ({
-  [order[0]]: order[1],
-});
-
-const batchToChangeset = (batch: Order[]): OrdersState =>
-  Object.assign({}, ...batch.map(orderToChangeset));
-
-const batchesToChangeset = (batches: Order[][]): OrdersState =>
-  Object.assign({}, ...batches.map(batchToChangeset));
-
 export type OrderChangesets = {
   asks: OrdersState;
   bids: OrdersState;
 };
-
-export const messagesToChangesets = (
-  messages: FeedPush[]
-): OrderChangesets => ({
-  asks: batchesToChangeset(messages.map((message) => message.asks)),
-  bids: batchesToChangeset(messages.map((message) => message.bids)),
-});
 
 type Totals = Record<Price, Size>;
 export type OrderTotals = {
@@ -35,6 +19,22 @@ export type OrderTotals = {
 };
 
 type MergedOrders = OrderChangesets;
+
+export type State = MergedOrders;
+
+const orderToChangeset = (order: Order): OrdersState => ({
+  [order[0]]: order[1],
+});
+
+const batchToChangeset = (batch: Order[]): OrdersState =>
+  Object.assign({}, ...batch.map(orderToChangeset));
+
+export const messagesToChangesets = (
+  messages: FeedPush[]
+): OrderChangesets => ({
+  asks: batchToChangeset(messages.flatMap((message) => message.asks)),
+  bids: batchToChangeset(messages.flatMap((message) => message.bids)),
+});
 
 const mergeOrders = (
   state: State,
@@ -71,28 +71,28 @@ const accumulateSizes = (
   };
 };
 
-const calculateTotals = (orders: OrdersState): Totals =>
+export const calculateTotals = (orders: OrdersState): Totals =>
   Object.entries(orders)
     .map(priceToNumber)
     .sort(byPriceAsc)
     .reduce<Totals>(accumulateSizes, {});
 
-const calculateOrdersTotals = (orders: MergedOrders): OrderTotals => ({
-  asks: calculateTotals(orders.asks),
-  bids: calculateTotals(orders.bids),
-});
-
-export type State = MergedOrders & { totals: OrderTotals };
+export const groupOrders = (orders: OrdersState, groupRange: number) =>
+  mapValues(
+    groupBy(
+      Object.entries(orders),
+      ([price]) => Math.ceil(+price / groupRange) * groupRange
+    ),
+    (groupedOrders) => sum(groupedOrders.map(([, size]) => size))
+  );
 
 export const applyChangesets =
   (changeset: OrderChangesets) =>
   (oldState: State): State => {
     const mergedOrders = mergeOrders(oldState, changeset);
-    const totals = calculateOrdersTotals(mergedOrders);
 
     return {
       ...oldState,
       ...mergedOrders,
-      totals,
     };
   };

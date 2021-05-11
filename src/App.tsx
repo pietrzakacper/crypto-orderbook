@@ -4,19 +4,21 @@ import {
   applyChangesets,
   messagesToChangesets,
   State,
-  priceToNumber,
   byPriceDesc,
+  groupOrders,
+  priceToNumber,
+  calculateTotals,
 } from "./orders";
 import { throttleAccumulated } from "./utils";
-import { flow } from "fp-ts/function";
+import { flow } from "lodash";
 
 const THROTTLE_INTERVAL_MS = 100;
+const GROUPS = [10, 20, 50, 100, 200, 500];
 
 function App() {
   const [state, setState] = useState<State>({
     asks: {},
     bids: {},
-    totals: { asks: {}, bids: {} },
   });
 
   const onMessage = useMemo(
@@ -32,16 +34,37 @@ function App() {
     openConnection().then(subscribeToOrderbook).then(listenToOrders(onMessage));
   }, [onMessage]);
 
+  const [groupIndex, setGroupIndex] = useState(~~GROUPS.length / 2);
+  const group = GROUPS[groupIndex];
+  const safelyIncrementGroup = (index: number) => () =>
+    setGroupIndex(Math.min(GROUPS.length - 1, Math.max(groupIndex + index, 0)));
+
+  const asksGrouped = groupOrders(state.asks, group);
+  const totals = calculateTotals(asksGrouped);
+
   return (
     <>
       <h1>Example</h1>
-      {Object.entries(state.asks)
+      <div>
+        Group by {group}
+        <button disabled={groupIndex === 0} onClick={safelyIncrementGroup(-1)}>
+          -
+        </button>
+        |
+        <button
+          disabled={groupIndex === GROUPS.length - 1}
+          onClick={safelyIncrementGroup(1)}
+        >
+          +
+        </button>
+      </div>
+      {Object.entries(asksGrouped)
         .map(priceToNumber)
         .filter(([, size]) => size !== 0)
         .sort(byPriceDesc)
         .map(([price, size]) => (
           <div key={price}>
-            Price: {price} | Size: {size} | Total: {state.totals.asks[+price]}
+            Price: {price} | Size: {size} | Total: {totals[+price]}
           </div>
         ))}
     </>
