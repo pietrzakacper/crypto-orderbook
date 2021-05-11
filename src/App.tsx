@@ -13,7 +13,11 @@ import { flow } from "fp-ts/function";
 const THROTTLE_INTERVAL_MS = 100;
 
 function App() {
-  const [state, setState] = useState({ asks: {}, bids: {} } as State);
+  const [state, setState] = useState<State>({
+    asks: {},
+    bids: {},
+    totals: { asks: {}, bids: {} },
+  });
 
   const onMessage = useMemo(
     () =>
