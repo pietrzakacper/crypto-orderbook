@@ -1,8 +1,7 @@
 import { JsonDecoder } from "ts.data.json";
 import { Order } from "./orders";
-import { Nominal } from "./types";
 
-type ConnectedSocket = Nominal<WebSocket, "ConnectedSocket">;
+type ConnectedSocket = WebSocket;
 
 const SERVER_URL = "wss://www.cryptofacilities.com/ws/v1";
 
@@ -10,7 +9,7 @@ export function openConnection(): Promise<ConnectedSocket> {
   return new Promise((resolve, reject) => {
     const socket = new WebSocket(SERVER_URL);
 
-    socket.onopen = () => resolve(socket as ConnectedSocket);
+    socket.onopen = () => resolve(socket);
     socket.onerror = reject;
   });
 }

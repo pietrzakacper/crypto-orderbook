@@ -5,7 +5,7 @@ export function throttleAccumulated<T>(
   callback: Callback<T>,
   intervalMs: number
 ): ThrottleFn<T> {
-  let events = [] as T[];
+  let events: T[] = [];
   let shouldFire = false;
 
   setInterval(() => {

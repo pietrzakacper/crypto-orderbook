@@ -1,16 +1,14 @@
 import { FeedPush } from "./api";
-import { Nominal } from "./types";
 
 export type Price = number;
 type Size = number;
 
-type OrdersState = Nominal<Record<Price, Size>, "OrdersState">;
+type OrdersState = Record<Price, Size>;
 export type Order = [Price, Size];
 
-const orderToChangeset = (order: Order): OrdersState =>
-  ({
-    [order[0]]: order[1],
-  } as OrdersState);
+const orderToChangeset = (order: Order): OrdersState => ({
+  [order[0]]: order[1],
+});
 
 const batchToChangeset = (batch: Order[]): OrdersState =>
   Object.assign({}, ...batch.map(orderToChangeset));
@@ -30,18 +28,63 @@ export const messagesToChangesets = (
   bids: batchesToChangeset(messages.map((message) => message.bids)),
 });
 
-type Totals = Nominal<Record<Price, Size>, "Totals">;
+type Totals = Record<Price, Size>;
 export type OrderTotals = {
   asks: Totals;
   bids: Totals;
 };
 
-export type State = Nominal<OrderChangesets, "State">;
+type MergedOrders = OrderChangesets;
+
+const mergeOrders = (
+  state: State,
+  changeset: OrderChangesets
+): MergedOrders => ({
+  asks: { ...state.asks, ...changeset.asks },
+  bids: { ...state.bids, ...changeset.bids },
+});
+
+export const priceToNumber = ([price, size]: [string, number]): Order => [
+  +price,
+  size,
+];
+
+export const byPriceAsc = ([priceA]: Order, [priceB]: Order) => priceA - priceB;
+export const byPriceDesc = ([priceA]: Order, [priceB]: Order) =>
+  priceB - priceA;
+
+const accumulateSizes = (
+  acc: Totals,
+  order: Order,
+  index: number,
+  ordersByPrice: Order[]
+): Totals => ({
+  ...acc,
+  [order[0]]: order[1] + (index > 0 ? acc[ordersByPrice[index - 1][0]] : 0),
+});
+
+const calculateTotals = (orders: OrdersState): Totals =>
+  Object.entries(orders)
+    .map(priceToNumber)
+    .sort(byPriceAsc)
+    .reduce<Totals>(accumulateSizes, {});
+
+const calculateOrdersTotals = (orders: MergedOrders): OrderTotals => ({
+  asks: calculateTotals(orders.asks),
+  bids: calculateTotals(orders.bids),
+});
+
+export type State = MergedOrders & { totals: OrderTotals };
 
 export const applyChangesets =
   (changeset: OrderChangesets) =>
-  (oldState: State): State => ({
-    ...oldState,
-    asks: { ...oldState.asks, ...changeset.asks },
-    bids: { ...oldState.bids, ...changeset.bids },
-  });
+  (oldState: State): State => {
+    const mergedOrders = mergeOrders(oldState, changeset);
+    const totals = calculateOrdersTotals(mergedOrders);
+
+    return {
+      ...oldState,
+      ...mergedOrders,
+      totals,
+    };
+  };

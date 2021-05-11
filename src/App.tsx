@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { listenToOrders, openConnection, subscribeToOrderbook } from "./api";
-import { applyChangesets, messagesToChangesets, State } from "./orders";
+import {
+  applyChangesets,
+  messagesToChangesets,
+  State,
+  priceToNumber,
+  byPriceDesc,
+} from "./orders";
 import { throttleAccumulated } from "./utils";
 import { flow } from "fp-ts/function";
 
@@ -26,10 +32,12 @@ function App() {
     <>
       <h1>Example</h1>
       {Object.entries(state.asks)
+        .map(priceToNumber)
         .filter(([, size]) => size !== 0)
+        .sort(byPriceDesc)
         .map(([price, size]) => (
           <div key={price}>
-            {price} | {size}
+            Price: {price} | Size: {size} | Total: {state.totals.asks[+price]}
           </div>
         ))}
     </>
