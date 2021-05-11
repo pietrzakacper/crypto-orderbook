@@ -58,10 +58,18 @@ const accumulateSizes = (
   order: Order,
   index: number,
   ordersByPrice: Order[]
-): Totals => ({
-  ...acc,
-  [order[0]]: order[1] + (index > 0 ? acc[ordersByPrice[index - 1][0]] : 0),
-});
+): Totals => {
+  if (index === 0) {
+    return orderToChangeset(order);
+  }
+
+  const prevAccumulatedSize = acc[ordersByPrice[index - 1][0]];
+
+  return {
+    ...acc,
+    [order[0]]: order[1] + prevAccumulatedSize,
+  };
+};
 
 const calculateTotals = (orders: OrdersState): Totals =>
   Object.entries(orders)
