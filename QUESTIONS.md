@@ -44,7 +44,7 @@ If for some reason we cannot reproduce it locally and it only happens on product
 ### 5. Can you describe common security concerns to consider for a frontend developer?
 
 - XSS - let's not render user inputted data directly in html, because an attacker can leverage that to execute code on our website and in result steal some data from other users for example.
-- CSRF - if we use cookies for storing our session tokens let's make sure we user CSRF tokens to properly authenticate the request sender
+- CSRF - if we use cookies for storing our session tokens let's make sure we use CSRF tokens to properly authenticate the request sender
 - User inputted data in general, for example if we allow for user inputted image url's and then render them mindlessly we basically allow attacker's for making request from other client's. They can use that to gather user info, such as IP's. Or if we experience huge traffic they could DDos some small website that's not ready for it.
 - Server header's for preventing rendering our website in IFrames
 - Some other Same-origin policy related considerations. E.g what if our server host's documents inputted by the user
@@ -53,4 +53,4 @@ If for some reason we cannot reproduce it locally and it only happens on product
 
 I guess in it's current form it's not taking into account how often do we want to update the UI. It's sending requests at a much higher rate than the user can observe a difference. To offload our client's machine I would batch event's on the server side and send them every 100ms or so.
 
-I suppose it's not meant for UI's but rather for trading bot's etc.
+I suppose it's not meant for UI's but rather for trading bot's etc. basically for client's that care for minimum latency.
