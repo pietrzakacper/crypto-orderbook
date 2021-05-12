@@ -9,6 +9,7 @@ import {
 import { throttleAccumulated } from "./utils";
 import { flow, clamp } from "lodash";
 import { OrderList } from "./OrderList";
+import { styled } from "@stitches/react";
 
 const THROTTLE_INTERVAL_MS = 300;
 const GROUPS = [0.5, 1, 5, 10, 20, 50, 100, 200, 500] as const;
@@ -56,10 +57,19 @@ function App() {
           +
         </button>
       </div>
-      <OrderList title="Ask" orders={asksGrouped} />
-      <OrderList title="Bid" orders={bidsGrouped} />
+      <OrdersContainer>
+        <OrderList title="Ask" orders={asksGrouped} />
+        <OrderList title="Bid" orders={bidsGrouped} />
+      </OrdersContainer>
     </>
   );
 }
+
+const OrdersContainer = styled("div", {
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  flexDirection: "column",
+});
 
 export default App;
