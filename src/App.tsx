@@ -4,16 +4,15 @@ import {
   applyChangesets,
   messagesToChangesets,
   State,
-  byPriceDesc,
   groupOrders,
-  priceToNumber,
-  calculateTotals,
 } from "./orders";
 import { throttleAccumulated } from "./utils";
 import { flow } from "lodash";
+import { OrderList } from "./OrderList";
 
 const THROTTLE_INTERVAL_MS = 100;
-const GROUPS = [10, 20, 50, 100, 200, 500];
+const GROUPS = [0.5, 1, 5, 10, 20, 50, 100, 200, 500] as const;
+export type Group = typeof GROUPS[number];
 
 function App() {
   const [state, setState] = useState<State>({
@@ -39,8 +38,9 @@ function App() {
   const safelyIncrementGroup = (index: number) => () =>
     setGroupIndex(Math.min(GROUPS.length - 1, Math.max(groupIndex + index, 0)));
 
-  const asksGrouped = groupOrders(state.asks, group);
-  const totals = calculateTotals(asksGrouped);
+  const [asksGrouped, bidsGrouped] = [state.asks, state.bids].map(
+    groupOrders(group)
+  );
 
   return (
     <>
@@ -58,15 +58,8 @@ function App() {
           +
         </button>
       </div>
-      {Object.entries(asksGrouped)
-        .map(priceToNumber)
-        .filter(([, size]) => size !== 0)
-        .sort(byPriceDesc)
-        .map(([price, size]) => (
-          <div key={price}>
-            Price: {price} | Size: {size} | Total: {totals[+price]}
-          </div>
-        ))}
+      <OrderList title="Ask" orders={asksGrouped} />
+      <OrderList title="Bid" orders={bidsGrouped} />
     </>
   );
 }

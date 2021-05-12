@@ -4,12 +4,12 @@ import { FeedPush } from "./api";
 export type Price = number;
 type Size = number;
 
-type OrdersState = Record<Price, Size>;
+export type OrdersMap = Record<Price, Size>;
 export type Order = [Price, Size];
 
 export type OrderChangesets = {
-  asks: OrdersState;
-  bids: OrdersState;
+  asks: OrdersMap;
+  bids: OrdersMap;
 };
 
 type Totals = Record<Price, Size>;
@@ -22,11 +22,11 @@ type MergedOrders = OrderChangesets;
 
 export type State = MergedOrders;
 
-const orderToChangeset = (order: Order): OrdersState => ({
+const orderToChangeset = (order: Order): OrdersMap => ({
   [order[0]]: order[1],
 });
 
-const batchToChangeset = (batch: Order[]): OrdersState =>
+const batchToChangeset = (batch: Order[]): OrdersMap =>
   Object.assign({}, ...batch.map(orderToChangeset));
 
 export const messagesToChangesets = (
@@ -59,25 +59,21 @@ const accumulateSizes = (
   index: number,
   ordersByPrice: Order[]
 ): Totals => {
-  if (index === 0) {
+  if (index === ordersByPrice.length - 1) {
     return orderToChangeset(order);
   }
 
-  const prevAccumulatedSize = acc[ordersByPrice[index - 1][0]];
-
+  const prevAccumulatedSize = acc[ordersByPrice[index + 1][0]];
   return {
     ...acc,
     [order[0]]: order[1] + prevAccumulatedSize,
   };
 };
 
-export const calculateTotals = (orders: OrdersState): Totals =>
-  Object.entries(orders)
-    .map(priceToNumber)
-    .sort(byPriceAsc)
-    .reduce<Totals>(accumulateSizes, {});
+export const calculateTotals = (ordersDesc: Order[]): Totals =>
+  ordersDesc.reduceRight<Totals>(accumulateSizes, {});
 
-export const groupOrders = (orders: OrdersState, groupRange: number) =>
+export const groupOrders = (groupRange: number) => (orders: OrdersMap) =>
   mapValues(
     groupBy(
       Object.entries(orders),
@@ -96,3 +92,20 @@ export const applyChangesets =
       ...mergedOrders,
     };
   };
+
+export const capOrders = (ordersDesc: Order[], maxSize: number) => {
+  if (ordersDesc.length <= maxSize) {
+    return ordersDesc;
+  }
+
+  const ordersBeforePivot = ordersDesc.slice(0, maxSize - 2);
+  const remainingOrders = ordersDesc.slice(maxSize - 1);
+
+  const pivotPrice = remainingOrders[0][0];
+  const combinedRemainingSizes = sum(remainingOrders.map(([, size]) => size));
+
+  return [
+    ...ordersBeforePivot,
+    [pivotPrice, combinedRemainingSizes],
+  ] as Order[];
+};
