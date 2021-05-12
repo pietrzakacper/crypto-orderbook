@@ -1,8 +1,8 @@
 import { FeedPush } from "./api";
-import { messagesToChangesets } from "./orders";
+import { groupOrders, messagesToChangesets } from "./orders";
 
 describe("messagesToChangesets", () => {
-  it("correctly maps empty push", () => {
+  it("maps empty push", () => {
     const push: FeedPush = {
       feed: "Example Feed",
       product_id: "X_PRODUCT",
@@ -18,7 +18,7 @@ describe("messagesToChangesets", () => {
     });
   });
 
-  it("correctly maps single push", () => {
+  it("maps single push", () => {
     const push: FeedPush = {
       feed: "Example Feed",
       product_id: "X_PRODUCT",
@@ -34,7 +34,7 @@ describe("messagesToChangesets", () => {
     });
   });
 
-  it("correctly merges multiple pushes", () => {
+  it("merges multiple pushes", () => {
     const push: FeedPush = {
       feed: "Example Feed",
       product_id: "X_PRODUCT",
@@ -62,5 +62,42 @@ describe("messagesToChangesets", () => {
         [1, 1],
       ]),
     });
+  });
+});
+
+describe("groupOrders", () => {
+  it("groups single order to the closest price level", () => {
+    const orders = new Map([[1.1, 1000]]);
+    const priceLevel = 1;
+    const result = groupOrders(priceLevel)(orders);
+
+    expect(result).toEqual(new Map([[1, 1000]]));
+  });
+  it("accumulates sizes on the same price level", () => {
+    const orders = new Map([
+      [1.1, 1000],
+      [0.9, 500],
+    ]);
+    const priceLevel = 1;
+    const result = groupOrders(priceLevel)(orders);
+
+    expect(result).toEqual(new Map([[1, 1500]]));
+  });
+  it("combines multiple price levels", () => {
+    const orders = new Map([
+      [1.1, 1000],
+      [2.499999, 200],
+      [0.9, 500],
+      [1.5, 200],
+    ]);
+    const priceLevel = 1;
+    const result = groupOrders(priceLevel)(orders);
+
+    expect(result).toEqual(
+      new Map([
+        [1, 1500],
+        [2, 400],
+      ])
+    );
   });
 });

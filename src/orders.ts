@@ -56,7 +56,7 @@ export const calculateTotals = (ordersDesc: Order[]): Totals =>
   ordersDesc.reduceRight<Totals>(accumulateSizes, new Map());
 
 const getGroupedPrice = (price: number, groupRange: number) =>
-  Math.ceil(price / groupRange) * groupRange;
+  Math.round(price / groupRange) * groupRange;
 
 export const groupOrders =
   (groupRange: number) =>
