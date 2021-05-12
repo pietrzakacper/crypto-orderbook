@@ -32,9 +32,15 @@ export function OrderList({ title, orders }: Props) {
           <tbody>
             {cappedOrders.map(([price, size]) => (
               <TableRow key={price}>
-                <TableData>{formatNumber(price, true)}</TableData>
-                <TableData>{formatNumber(size)}</TableData>
-                <TableData>{formatNumber(totals[+price])}</TableData>
+                <TableData>
+                  <span>{formatNumber(price, true)}</span>
+                </TableData>
+                <TableData>
+                  <span>{formatNumber(size)}</span>
+                </TableData>
+                <TableData>
+                  <span>{formatNumber(totals[+price])}</span>
+                </TableData>
               </TableRow>
             ))}
           </tbody>
@@ -51,7 +57,7 @@ function formatNumber(x: number, float = false) {
   );
 }
 const TableContainer = styled("div", {
-  minHeight: 250,
+  minHeight: 265,
 });
 
 const Title = styled("h2", {
@@ -72,7 +78,13 @@ const Container = styled("div", {
   variants: {
     size: {
       small: { margin: "0.2rem", background: "transparent" },
-      normal: { margin: "1rem", background: "#ffffff0d" },
+      normal: {
+        margin: "1rem",
+        background: "#ffffff0d",
+        "& *": {
+          letterSpacing: "0.3rem",
+        },
+      },
     },
   },
 });
@@ -90,24 +102,20 @@ const TableRow = styled("tr", {
 });
 
 const TableData = styled("td", {
-  padding: "5px 10px",
-  height: "1rem",
+  height: "2rem",
+  position: "relative",
   "& > span": {
-    background: "#eee",
-    color: "dimgrey",
-    display: "none",
-    fontSize: "10px",
+    fontSize: "1rem",
     fontWeight: "bold",
-    padding: "2px",
     position: "absolute",
-    top: 0,
-    left: 0,
+    padding: "5px",
+    bottom: 0,
+    right: 0,
   },
 });
 
 const TableHeader = styled("th", {
-  padding: "10px 10px",
+  padding: "10px 5px",
   width: "33%",
   textTransform: "uppercase",
-  letterSpacing: "0.3rem",
 });
