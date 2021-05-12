@@ -1,5 +1,5 @@
 import { FeedPush } from "./api";
-import { groupOrders, messagesToChangesets } from "./orders";
+import { applyChangeset, groupOrders, messagesToChangesets } from "./orders";
 
 describe("messagesToChangesets", () => {
   it("maps empty push", () => {
@@ -101,5 +101,37 @@ describe("groupOrders", () => {
         [2, 400],
       ])
     );
+  });
+});
+
+describe("applyChangeset", () => {
+  it("removes orders of size 0", () => {
+    const oldState = new Map([
+      [1, 1000],
+      [2, 1000],
+    ]);
+    const changeset = new Map([[1, 0]]);
+
+    const result = applyChangeset(oldState, changeset);
+
+    expect(result).toEqual(new Map([[2, 1000]]));
+  });
+
+  it("replaces old orders", () => {
+    const oldState = new Map([[1, 1000]]);
+    const changeset = new Map([[1, 2000]]);
+
+    const result = applyChangeset(oldState, changeset);
+
+    expect(result).toEqual(new Map([[1, 2000]]));
+  });
+
+  it("adds new orders", () => {
+    const oldState = new Map<number, number>([]);
+    const changeset = new Map([[1, 2000]]);
+
+    const result = applyChangeset(oldState, changeset);
+
+    expect(result).toEqual(new Map([[1, 2000]]));
   });
 });
