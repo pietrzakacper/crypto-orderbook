@@ -43,41 +43,75 @@ function App() {
 
   return (
     <Container>
+      <Title>PI_XBTUSD</Title>
       <OrdersContainer>
         <OrderList title="Ask" orders={asksGrouped} />
+        {
+          <GroupControlsContainer>
+            <GroupButton
+              disabled={groupIndex === 0}
+              onClick={safelyIncrementGroup(-1)}
+            >
+              ‹
+            </GroupButton>
+            Group by {group.toFixed(2)}
+            <GroupButton
+              disabled={groupIndex === GROUPS.length - 1}
+              onClick={safelyIncrementGroup(1)}
+            >
+              ›
+            </GroupButton>
+          </GroupControlsContainer>
+        }
         <OrderList title="Bid" orders={bidsGrouped} />
       </OrdersContainer>
     </Container>
   );
-  // {
-  //   /* <h1>Example</h1>
-  // <div>
-  //   Group by {group}
-  //   <button disabled={groupIndex === 0} onClick={safelyIncrementGroup(-1)}>
-  //     -
-  //   </button>
-  //   |
-  //   <button
-  //     disabled={groupIndex === GROUPS.length - 1}
-  //     onClick={safelyIncrementGroup(1)}
-  //   >
-  //     +
-  //   </button>
-  // </div> */
-  // }
 }
+
+const Title = styled("h1", {
+  textAlign: "left",
+  margin: 0,
+  fontSize: "1rem",
+  textTransform: "uppercase",
+  color: "white",
+  marginBottom: "0.2rem",
+});
 
 const Container = styled("div", {
   display: "flex",
-  alignItems: "center",
+  flexDirection: "column",
   justifyContent: "center",
+  alignItems: "center",
   width: "100vw",
   height: "100vh",
+  "& > *": {
+    width: "80%",
+    maxWidth: "900px",
+  },
+});
+
+const GroupControlsContainer = styled("div", {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+});
+
+const GroupButton = styled("button", {
+  padding: "0.2rem 1rem",
+  margin: "0 0.5rem",
+  backgroundColor: "transparent",
+  border: "none",
+  borderRadius: "3px",
+  fontSize: "2rem",
+  color: "white",
+  cursor: "pointer",
+  "&:hover": {
+    background: "#ffffff1f",
+  },
 });
 
 const OrdersContainer = styled("div", {
-  width: "80%",
-  maxWidth: "900px",
   display: "flex",
   padding: "1rem",
   alignItems: "center",

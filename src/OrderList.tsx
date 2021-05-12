@@ -55,9 +55,11 @@ const Title = styled("h2", {
 });
 
 const Container = styled("div", {
-  minHeight: 220,
+  minHeight: 250,
   width: "100%",
   margin: "1rem",
+  background: "#ffffff0d",
+  borderRadius: "4px",
 });
 
 const Table = styled("table", {
@@ -91,4 +93,5 @@ const TableHeader = styled("th", {
   padding: "10px 10px",
   width: "33%",
   textTransform: "uppercase",
+  letterSpacing: "0.3rem",
 });
