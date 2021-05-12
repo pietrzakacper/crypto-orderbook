@@ -21,7 +21,7 @@ export function OrderList({ title, orders }: Props) {
 
   return (
     <Container>
-      <h2>{title}</h2>
+      <Title>{title}</Title>
       <Table>
         <thead>
           <TableHeader>Price</TableHeader>
@@ -31,9 +31,9 @@ export function OrderList({ title, orders }: Props) {
         <tbody>
           {cappedOrders.map(([price, size]) => (
             <TableRow key={price}>
-              <TableData>{price.toFixed(2)}</TableData>
-              <TableData>{size}</TableData>
-              <TableData>{totals[+price]}</TableData>
+              <TableData>{numberWithCommas(+price.toFixed(2))}</TableData>
+              <TableData>{numberWithCommas(size)}</TableData>
+              <TableData>{numberWithCommas(totals[+price])}</TableData>
             </TableRow>
           ))}
         </tbody>
@@ -41,9 +41,23 @@ export function OrderList({ title, orders }: Props) {
     </Container>
   );
 }
+
+function numberWithCommas(x: number) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+const Title = styled("h2", {
+  position: "absolute",
+  margin: 0,
+  fontSize: "3rem",
+  textTransform: "uppercase",
+  color: "#ffffff87",
+});
+
 const Container = styled("div", {
-  height: 400,
-  width: "80%",
+  minHeight: 220,
+  width: "100%",
+  margin: "1rem",
 });
 
 const Table = styled("table", {
@@ -53,20 +67,20 @@ const Table = styled("table", {
 });
 
 const TableRow = styled("tr", {
-  background: "white",
   borderBottom: "1px solid",
-  height: "3rem",
+  borderColor: "#ffffff73",
+  height: "1rem",
 });
 
 const TableData = styled("td", {
-  padding: "10px 20px",
+  padding: "5px 10px",
   "& > span": {
     background: "#eee",
     color: "dimgrey",
     display: "none",
     fontSize: "10px",
     fontWeight: "bold",
-    padding: "5px",
+    padding: "2px",
     position: "absolute",
     top: 0,
     left: 0,
@@ -74,6 +88,7 @@ const TableData = styled("td", {
 });
 
 const TableHeader = styled("th", {
-  padding: "10px 20px",
+  padding: "10px 10px",
   width: "33%",
+  textTransform: "uppercase",
 });

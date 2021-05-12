@@ -42,34 +42,50 @@ function App() {
   const [asksGrouped, bidsGrouped] = [asks, bids].map(groupOrders(group));
 
   return (
-    <>
-      <h1>Example</h1>
-      <div>
-        Group by {group}
-        <button disabled={groupIndex === 0} onClick={safelyIncrementGroup(-1)}>
-          -
-        </button>
-        |
-        <button
-          disabled={groupIndex === GROUPS.length - 1}
-          onClick={safelyIncrementGroup(1)}
-        >
-          +
-        </button>
-      </div>
+    <Container>
       <OrdersContainer>
         <OrderList title="Ask" orders={asksGrouped} />
         <OrderList title="Bid" orders={bidsGrouped} />
       </OrdersContainer>
-    </>
+    </Container>
   );
+  // {
+  //   /* <h1>Example</h1>
+  // <div>
+  //   Group by {group}
+  //   <button disabled={groupIndex === 0} onClick={safelyIncrementGroup(-1)}>
+  //     -
+  //   </button>
+  //   |
+  //   <button
+  //     disabled={groupIndex === GROUPS.length - 1}
+  //     onClick={safelyIncrementGroup(1)}
+  //   >
+  //     +
+  //   </button>
+  // </div> */
+  // }
 }
 
-const OrdersContainer = styled("div", {
-  width: "100%",
+const Container = styled("div", {
   display: "flex",
   alignItems: "center",
+  justifyContent: "center",
+  width: "100vw",
+  height: "100vh",
+});
+
+const OrdersContainer = styled("div", {
+  width: "80%",
+  maxWidth: "900px",
+  display: "flex",
+  padding: "1rem",
+  alignItems: "center",
   flexDirection: "column",
+  boxShadow: "0 0 1rem 0 rgba(0, 0, 0, .2)",
+  borderRadius: "5px",
+  backgroundColor: "rgba(255, 255, 255, .15)",
+  backdropFilter: "blur(5px)",
 });
 
 export default App;
