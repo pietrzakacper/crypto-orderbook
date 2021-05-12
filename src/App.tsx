@@ -7,15 +7,15 @@ import {
   groupOrders,
 } from "./orders";
 import { throttleAccumulated } from "./utils";
-import { flow } from "lodash";
+import { flow, clamp } from "lodash";
 import { OrderList } from "./OrderList";
 
-const THROTTLE_INTERVAL_MS = 100;
+const THROTTLE_INTERVAL_MS = 300;
 const GROUPS = [0.5, 1, 5, 10, 20, 50, 100, 200, 500] as const;
 export type Group = typeof GROUPS[number];
 
 function App() {
-  const [state, setState] = useState<State>({
+  const [{ asks, bids }, setState] = useState<State>({
     asks: {},
     bids: {},
   });
@@ -33,14 +33,12 @@ function App() {
     openConnection().then(subscribeToOrderbook).then(listenToOrders(onMessage));
   }, [onMessage]);
 
-  const [groupIndex, setGroupIndex] = useState(~~GROUPS.length / 2);
+  const [groupIndex, setGroupIndex] = useState(0);
   const group = GROUPS[groupIndex];
-  const safelyIncrementGroup = (index: number) => () =>
-    setGroupIndex(Math.min(GROUPS.length - 1, Math.max(groupIndex + index, 0)));
+  const safelyIncrementGroup = (inc: number) => () =>
+    setGroupIndex((oldIndex) => clamp(oldIndex + inc, GROUPS.length));
 
-  const [asksGrouped, bidsGrouped] = [state.asks, state.bids].map(
-    groupOrders(group)
-  );
+  const [asksGrouped, bidsGrouped] = [asks, bids].map(groupOrders(group));
 
   return (
     <>
