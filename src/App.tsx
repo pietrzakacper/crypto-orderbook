@@ -17,9 +17,11 @@ export type Group = typeof GROUPS[number];
 
 function App() {
   const [{ asks, bids }, setState] = useState<State>({
-    asks: {},
-    bids: {},
+    asks: new Map(),
+    bids: new Map(),
   });
+
+  const [groupIndex, setGroupIndex] = useState(0);
 
   const onMessage = useMemo(
     () =>
@@ -34,10 +36,10 @@ function App() {
     openConnection().then(subscribeToOrderbook).then(listenToOrders(onMessage));
   }, [onMessage]);
 
-  const [groupIndex, setGroupIndex] = useState(0);
-  const group = GROUPS[groupIndex];
   const safelyIncrementGroup = (inc: number) => () =>
     setGroupIndex((oldIndex) => clamp(oldIndex + inc, GROUPS.length));
+
+  const group = GROUPS[groupIndex];
 
   const [asksGrouped, bidsGrouped] = [asks, bids].map(groupOrders(group));
 

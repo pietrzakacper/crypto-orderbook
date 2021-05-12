@@ -1,10 +1,10 @@
-import { groupBy, mapValues, sum } from "lodash";
+import { sum } from "lodash";
 import { FeedPush } from "./api";
 
 export type Price = number;
 type Size = number;
 
-export type OrdersMap = Record<Price, Size>;
+export type OrdersMap = Map<Price, Size>;
 export type Order = [Price, Size];
 
 export type OrderChangesets = {
@@ -12,7 +12,7 @@ export type OrderChangesets = {
   bids: OrdersMap;
 };
 
-type Totals = Record<Price, Size>;
+type Totals = Map<Price, Size>;
 export type OrderTotals = {
   asks: Totals;
   bids: Totals;
@@ -22,32 +22,17 @@ type MergedOrders = OrderChangesets;
 
 export type State = MergedOrders;
 
-const orderToChangeset = (order: Order): OrdersMap => ({
-  [order[0]]: order[1],
-});
-
-const batchToChangeset = (batch: Order[]): OrdersMap =>
-  Object.assign({}, ...batch.map(orderToChangeset));
+const toChangeset = (
+  messages: FeedPush[],
+  selectOrders: (message: FeedPush) => Order[]
+): OrdersMap => new Map(messages.flatMap(selectOrders));
 
 export const messagesToChangesets = (
   messages: FeedPush[]
 ): OrderChangesets => ({
-  asks: batchToChangeset(messages.flatMap((message) => message.asks)),
-  bids: batchToChangeset(messages.flatMap((message) => message.bids)),
+  asks: toChangeset(messages, (msg) => msg.asks),
+  bids: toChangeset(messages, (msg) => msg.bids),
 });
-
-const mergeOrders = (
-  state: State,
-  changeset: OrderChangesets
-): MergedOrders => ({
-  asks: { ...state.asks, ...changeset.asks },
-  bids: { ...state.bids, ...changeset.bids },
-});
-
-export const priceToNumber = ([price, size]: [string, number]): Order => [
-  +price,
-  size,
-];
 
 export const byPriceAsc = ([priceA]: Order, [priceB]: Order) => priceA - priceB;
 export const byPriceDesc = ([priceA]: Order, [priceB]: Order) =>
@@ -60,38 +45,39 @@ const accumulateSizes = (
   ordersByPrice: Order[]
 ): Totals => {
   if (index === ordersByPrice.length - 1) {
-    return orderToChangeset(order);
+    return acc.set(...order);
   }
 
-  const prevAccumulatedSize = acc[ordersByPrice[index + 1][0]];
-  return {
-    ...acc,
-    [order[0]]: order[1] + prevAccumulatedSize,
-  };
+  const prevAccumulatedSize = acc.get(ordersByPrice[index + 1][0]);
+  return acc.set(order[0], order[1] + prevAccumulatedSize!);
 };
 
 export const calculateTotals = (ordersDesc: Order[]): Totals =>
-  ordersDesc.reduceRight<Totals>(accumulateSizes, {});
+  ordersDesc.reduceRight<Totals>(accumulateSizes, new Map());
 
-export const groupOrders = (groupRange: number) => (orders: OrdersMap) =>
-  mapValues(
-    groupBy(
-      Object.entries(orders),
-      ([price]) => Math.ceil(+price / groupRange) * groupRange
-    ),
-    (groupedOrders) => sum(groupedOrders.map(([, size]) => size))
-  );
+const getGroupedPrice = (price: number, groupRange: number) =>
+  Math.ceil(price / groupRange) * groupRange;
+
+export const groupOrders =
+  (groupRange: number) =>
+  (orders: OrdersMap): OrdersMap => {
+    const groupedMap = new Map();
+
+    for (const [price, size] of orders) {
+      const groupedPrice = getGroupedPrice(price, groupRange);
+      const oldSize = groupedMap.get(groupedPrice) || 0;
+      groupedMap.set(groupedPrice, oldSize + size);
+    }
+
+    return groupedMap;
+  };
 
 export const applyChangesets =
   (changeset: OrderChangesets) =>
-  (oldState: State): State => {
-    const mergedOrders = mergeOrders(oldState, changeset);
-
-    return {
-      ...oldState,
-      ...mergedOrders,
-    };
-  };
+  (oldState: State): State => ({
+    asks: new Map([...oldState.asks, ...changeset.asks]),
+    bids: new Map([...oldState.bids, ...changeset.bids]),
+  });
 
 export const capOrders = (ordersDesc: Order[], maxSize: number) => {
   if (ordersDesc.length <= maxSize) {

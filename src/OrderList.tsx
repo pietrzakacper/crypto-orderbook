@@ -1,6 +1,6 @@
 import React from "react";
 import { OrdersMap, byPriceDesc } from "./orders";
-import { capOrders, priceToNumber, calculateTotals } from "./orders";
+import { capOrders, calculateTotals } from "./orders";
 import { styled } from "./styled";
 
 type Props = {
@@ -11,8 +11,7 @@ type Props = {
 const MAX_LIST_SIZE = 7;
 
 export function OrderList({ title, orders }: Props) {
-  const sortedOrders = Object.entries(orders)
-    .map(priceToNumber)
+  const sortedOrders = [...orders.entries()]
     .filter(([, size]) => size !== 0)
     .sort(byPriceDesc);
 
@@ -39,7 +38,7 @@ export function OrderList({ title, orders }: Props) {
                   <span>{formatNumber(size)}</span>
                 </TableData>
                 <TableData>
-                  <span>{formatNumber(totals[+price])}</span>
+                  <span>{formatNumber(totals.get(price)!)}</span>
                 </TableData>
               </TableRow>
             ))}
@@ -50,12 +49,9 @@ export function OrderList({ title, orders }: Props) {
   );
 }
 
-function formatNumber(x: number, float = false) {
-  return (float ? x.toFixed(2) : x.toString()).replace(
-    /\B(?=(\d{3})+(?!\d))/g,
-    ","
-  );
-}
+const formatNumber = (x: number, float = false) =>
+  (float ? x.toFixed(2) : x.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 const TableContainer = styled("div", {
   minHeight: 265,
 });
