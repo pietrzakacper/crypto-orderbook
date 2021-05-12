@@ -52,3 +52,5 @@ If for some reason we cannot reproduce it locally and it only happens on product
 ### 6. How would you improve the API that you just used?
 
 I guess in it's current form it's not taking into account how often do we want to update the UI. It's sending requests at a much higher rate than the user can observe a difference. To offload our client's machine I would batch event's on the server side and send them every 100ms or so.
+
+I suppose it's not meant for UI's but rather for trading bot's etc.
