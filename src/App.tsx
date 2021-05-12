@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { listenToOrders, openConnection, subscribeToOrderbook } from "./api";
 import {
-  applyChangesets,
+  applyChangeset,
   messagesToChangesets,
   State,
   groupOrders,
+  byPriceDesc,
+  OrderChangesets,
 } from "./orders";
 import { throttleAccumulated } from "./utils";
 import { flow, clamp } from "lodash";
-import { OrderList } from "./OrderList";
+import { MAX_LIST_SIZE, OrderList } from "./OrderList";
 import { styled } from "./styled";
 
 const THROTTLE_INTERVAL_MS = 150;
@@ -41,13 +43,18 @@ function App() {
 
   const group = GROUPS[groupIndex];
 
-  const [asksGrouped, bidsGrouped] = [asks, bids].map(groupOrders(group));
+  const [asksGrouped, bidsGrouped] = [asks, bids]
+    .map(groupOrders(group))
+    .map((orders) => [...orders.entries()].sort(byPriceDesc));
+
+  const highestAsks = asksGrouped.slice(0, MAX_LIST_SIZE);
+  const lowestBids = bidsGrouped.slice(-MAX_LIST_SIZE);
 
   return (
     <Container size={{ "@bp1": "small", "@bp2": "normal" }}>
       <Title>PI_XBTUSD</Title>
       <OrdersContainer size={{ "@bp1": "small", "@bp2": "normal" }}>
-        <OrderList title="Ask" orders={asksGrouped} />
+        <OrderList title="Ask" ordersDesc={highestAsks} />
         {
           <GroupControlsContainer>
             <GroupButton
@@ -65,11 +72,18 @@ function App() {
             </GroupButton>
           </GroupControlsContainer>
         }
-        <OrderList title="Bid" orders={bidsGrouped} />
+        <OrderList title="Bid" ordersDesc={lowestBids} />
       </OrdersContainer>
     </Container>
   );
 }
+
+const applyChangesets =
+  (changeset: OrderChangesets) =>
+  (oldState: State): State => ({
+    asks: applyChangeset(oldState.asks, changeset.asks),
+    bids: applyChangeset(oldState.bids, changeset.bids),
+  });
 
 const Title = styled("h1", {
   textAlign: "left",

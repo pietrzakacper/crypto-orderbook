@@ -1,4 +1,3 @@
-import { sum } from "lodash";
 import { FeedPush } from "./api";
 
 export type Price = number;
@@ -72,26 +71,19 @@ export const groupOrders =
     return groupedMap;
   };
 
-export const applyChangesets =
-  (changeset: OrderChangesets) =>
-  (oldState: State): State => ({
-    asks: new Map([...oldState.asks, ...changeset.asks]),
-    bids: new Map([...oldState.bids, ...changeset.bids]),
-  });
+export const applyChangeset = (
+  oldState: OrdersMap,
+  changeset: OrdersMap
+): OrdersMap => {
+  const newState = new Map([...oldState]);
 
-export const capOrders = (ordersDesc: Order[], maxSize: number) => {
-  if (ordersDesc.length <= maxSize) {
-    return ordersDesc;
+  for (const [price, size] of changeset) {
+    if (size === 0) {
+      newState.delete(price);
+    } else {
+      newState.set(price, size);
+    }
   }
 
-  const ordersBeforePivot = ordersDesc.slice(0, maxSize - 2);
-  const remainingOrders = ordersDesc.slice(maxSize - 1);
-
-  const pivotPrice = remainingOrders[0][0];
-  const combinedRemainingSizes = sum(remainingOrders.map(([, size]) => size));
-
-  return [
-    ...ordersBeforePivot,
-    [pivotPrice, combinedRemainingSizes],
-  ] as Order[];
+  return newState;
 };

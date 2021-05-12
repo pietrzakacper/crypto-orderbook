@@ -73,6 +73,7 @@ describe("groupOrders", () => {
 
     expect(result).toEqual(new Map([[1, 1000]]));
   });
+
   it("accumulates sizes on the same price level", () => {
     const orders = new Map([
       [1.1, 1000],
@@ -83,6 +84,7 @@ describe("groupOrders", () => {
 
     expect(result).toEqual(new Map([[1, 1500]]));
   });
+
   it("combines multiple price levels", () => {
     const orders = new Map([
       [1.1, 1000],

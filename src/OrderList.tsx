@@ -1,22 +1,17 @@
 import React from "react";
-import { OrdersMap, byPriceDesc } from "./orders";
-import { capOrders, calculateTotals } from "./orders";
+import { Order } from "./orders";
+import { calculateTotals } from "./orders";
 import { styled } from "./styled";
 
 type Props = {
   title: string;
-  orders: OrdersMap;
+  ordersDesc: Order[];
 };
 
-const MAX_LIST_SIZE = 7;
+export const MAX_LIST_SIZE = 7;
 
-export function OrderList({ title, orders }: Props) {
-  const sortedOrders = [...orders.entries()]
-    .filter(([, size]) => size !== 0)
-    .sort(byPriceDesc);
-
-  const cappedOrders = capOrders(sortedOrders, MAX_LIST_SIZE);
-  const totals = calculateTotals(cappedOrders);
+export function OrderList({ title, ordersDesc }: Props) {
+  const totals = calculateTotals(ordersDesc);
 
   return (
     <Container size={{ "@bp1": "small", "@bp2": "normal" }}>
@@ -29,7 +24,7 @@ export function OrderList({ title, orders }: Props) {
             <TableHeader>Total</TableHeader>
           </thead>
           <tbody>
-            {cappedOrders.map(([price, size]) => (
+            {ordersDesc.map(([price, size]) => (
               <TableRow key={price}>
                 <TableData>
                   <span>{formatNumber(price, true)}</span>
