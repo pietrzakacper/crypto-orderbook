@@ -1,7 +1,7 @@
 import React from "react";
 import { OrdersMap, byPriceDesc } from "./orders";
 import { capOrders, priceToNumber, calculateTotals } from "./orders";
-import { styled } from "@stitches/react";
+import { styled } from "./styled";
 
 type Props = {
   title: string;
@@ -20,46 +20,61 @@ export function OrderList({ title, orders }: Props) {
   const totals = calculateTotals(cappedOrders);
 
   return (
-    <Container>
-      <Title>{title}</Title>
-      <Table>
-        <thead>
-          <TableHeader>Price</TableHeader>
-          <TableHeader>Size</TableHeader>
-          <TableHeader>Total</TableHeader>
-        </thead>
-        <tbody>
-          {cappedOrders.map(([price, size]) => (
-            <TableRow key={price}>
-              <TableData>{numberWithCommas(+price.toFixed(2))}</TableData>
-              <TableData>{numberWithCommas(size)}</TableData>
-              <TableData>{numberWithCommas(totals[+price])}</TableData>
-            </TableRow>
-          ))}
-        </tbody>
-      </Table>
+    <Container size={{ "@bp1": "small", "@bp2": "normal" }}>
+      <Title size={{ "@bp1": "small", "@bp2": "big" }}>{title}</Title>
+      <TableContainer>
+        <Table>
+          <thead>
+            <TableHeader>Price</TableHeader>
+            <TableHeader>Size</TableHeader>
+            <TableHeader>Total</TableHeader>
+          </thead>
+          <tbody>
+            {cappedOrders.map(([price, size]) => (
+              <TableRow key={price}>
+                <TableData>{formatNumber(price, true)}</TableData>
+                <TableData>{formatNumber(size)}</TableData>
+                <TableData>{formatNumber(totals[+price])}</TableData>
+              </TableRow>
+            ))}
+          </tbody>
+        </Table>
+      </TableContainer>
     </Container>
   );
 }
 
-function numberWithCommas(x: number) {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function formatNumber(x: number, float = false) {
+  return (float ? x.toFixed(2) : x.toString()).replace(
+    /\B(?=(\d{3})+(?!\d))/g,
+    ","
+  );
 }
+const TableContainer = styled("div", {
+  minHeight: 250,
+});
 
 const Title = styled("h2", {
-  position: "absolute",
   margin: 0,
-  fontSize: "3rem",
   textTransform: "uppercase",
   color: "#ffffff87",
+  variants: {
+    size: {
+      small: { fontSize: "1rem" },
+      big: { position: "absolute", fontSize: "3rem" },
+    },
+  },
 });
 
 const Container = styled("div", {
-  minHeight: 250,
   width: "100%",
-  margin: "1rem",
-  background: "#ffffff0d",
   borderRadius: "4px",
+  variants: {
+    size: {
+      small: { margin: "0.2rem", background: "transparent" },
+      normal: { margin: "1rem", background: "#ffffff0d" },
+    },
+  },
 });
 
 const Table = styled("table", {
@@ -76,6 +91,7 @@ const TableRow = styled("tr", {
 
 const TableData = styled("td", {
   padding: "5px 10px",
+  height: "1rem",
   "& > span": {
     background: "#eee",
     color: "dimgrey",

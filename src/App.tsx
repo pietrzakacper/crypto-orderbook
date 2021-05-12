@@ -9,9 +9,9 @@ import {
 import { throttleAccumulated } from "./utils";
 import { flow, clamp } from "lodash";
 import { OrderList } from "./OrderList";
-import { styled } from "@stitches/react";
+import { styled } from "./styled";
 
-const THROTTLE_INTERVAL_MS = 300;
+const THROTTLE_INTERVAL_MS = 150;
 const GROUPS = [0.5, 1, 5, 10, 20, 50, 100, 200, 500] as const;
 export type Group = typeof GROUPS[number];
 
@@ -42,9 +42,9 @@ function App() {
   const [asksGrouped, bidsGrouped] = [asks, bids].map(groupOrders(group));
 
   return (
-    <Container>
+    <Container size={{ "@bp1": "small", "@bp2": "normal" }}>
       <Title>PI_XBTUSD</Title>
-      <OrdersContainer>
+      <OrdersContainer size={{ "@bp1": "small", "@bp2": "normal" }}>
         <OrderList title="Ask" orders={asksGrouped} />
         {
           <GroupControlsContainer>
@@ -54,7 +54,7 @@ function App() {
             >
               ‹
             </GroupButton>
-            Group by {group.toFixed(2)}
+            <GroupText>Group by {group.toFixed(2)}</GroupText>
             <GroupButton
               disabled={groupIndex === GROUPS.length - 1}
               onClick={safelyIncrementGroup(1)}
@@ -85,9 +85,21 @@ const Container = styled("div", {
   alignItems: "center",
   width: "100vw",
   height: "100vh",
-  "& > *": {
-    width: "80%",
-    maxWidth: "900px",
+
+  variants: {
+    size: {
+      small: {
+        "& > *": {
+          width: "90%",
+        },
+      },
+      normal: {
+        "& > *": {
+          width: "80%",
+          maxWidth: "900px",
+        },
+      },
+    },
   },
 });
 
@@ -111,15 +123,25 @@ const GroupButton = styled("button", {
   },
 });
 
+const GroupText = styled("div", {
+  minWidth: "120px",
+  textAlign: "center",
+});
+
 const OrdersContainer = styled("div", {
   display: "flex",
-  padding: "1rem",
   alignItems: "center",
   flexDirection: "column",
   boxShadow: "0 0 1rem 0 rgba(0, 0, 0, .2)",
   borderRadius: "5px",
   backgroundColor: "rgba(255, 255, 255, .15)",
   backdropFilter: "blur(5px)",
+  variants: {
+    size: {
+      small: { padding: "0.5rem 1rem" },
+      normal: { padding: "1rem" },
+    },
+  },
 });
 
 export default App;
